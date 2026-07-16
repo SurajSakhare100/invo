@@ -36,4 +36,3 @@ A modern invoice management platform that helps businesses manage customers, inv
 - ESLint
 - Prettier
 
-# invo
