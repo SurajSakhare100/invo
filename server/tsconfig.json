@@ -9,9 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
 
-    "types": [
-      "node"
-    ],
+    
 
     "lib": [
       "ES2020"
