@@ -7,10 +7,11 @@ export function setUnauthorizedHandler(handler: (() => void) | null): void {
 }
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL!,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials:true
 });
 
 api.interceptors.request.use(

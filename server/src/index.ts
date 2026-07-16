@@ -47,7 +47,7 @@ app.use(
       callback: (error: Error | null, success?: boolean) => void
     ) {
       if (!origin) {
-        callback(null, true);
+        callback(new Error(`CORS not allowed: ${origin}`));
         return;
       }
 
