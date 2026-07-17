@@ -7,23 +7,21 @@ import {
   deleteInvoice,
   bulkDeleteInvoices,
   getInvoiceStats,
+  sendInvoicePdf,
 } from '../controllers/invoiceController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// Protect all routes
 router.use(protect);
 
-// Stats endpoint (must be before /:id)
 router.get('/stats', getInvoiceStats);
-
-// CRUD
 router.get('/', getInvoices);
 router.get('/:id', getInvoiceById);
 router.post('/', createInvoice);
+router.post('/:id/send-pdf', sendInvoicePdf);
 router.put('/:id', updateInvoice);
-router.delete('/', bulkDeleteInvoices);   // bulk delete (body: { ids: [] })
+router.delete('/', bulkDeleteInvoices);
 router.delete('/:id', deleteInvoice);
 
 export default router;

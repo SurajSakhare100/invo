@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Bell,
@@ -46,6 +47,7 @@ const DEFAULT_FILTERS: ListFilters = {
 
 export default function Invoice() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Filters
   const [activeTab, setActiveTab] = useState<TabType>('All');
@@ -60,7 +62,6 @@ export default function Invoice() {
   const [selected, setSelected] = useState<string[]>([]);
 
   // Modals
-  const [createOpen, setCreateOpen] = useState(false);
   const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
@@ -115,7 +116,6 @@ export default function Invoice() {
     mutationFn: (data: InvoiceFormData) => invoiceService.createInvoice(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      setCreateOpen(false);
     },
   });
 
@@ -308,7 +308,7 @@ export default function Invoice() {
               Export
             </button>
             <button
-              onClick={() => setCreateOpen(true)}
+              onClick={() => navigate('/invoices/new')}
               className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#7ED957] text-black text-sm font-bold hover:bg-[#6fcf4a] transition-colors shadow-sm"
             >
               <Plus size={15} />
@@ -478,7 +478,7 @@ export default function Invoice() {
                         </p>
                         {!hasActiveFilters && (
                           <button
-                            onClick={() => setCreateOpen(true)}
+                            onClick={() => navigate('/invoices/new')}
                             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#7ED957] text-black text-sm font-bold hover:bg-[#6fcf4a] transition-colors"
                           >
                             <Plus size={14} /> Create Invoice
@@ -701,14 +701,6 @@ export default function Invoice() {
       </main>
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}
-
-      {/* Create */}
-      <InvoiceModal
-        isOpen={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onSubmit={async (data) => { await createMutation.mutateAsync(data); }}
-        loading={createMutation.isPending}
-      />
 
       {/* Edit */}
       <InvoiceModal

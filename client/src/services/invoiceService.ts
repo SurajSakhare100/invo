@@ -6,6 +6,7 @@ import type {
   InvoiceFormData,
   InvoiceFilters,
   SendPaymentLinkResponse,
+  SendInvoicePdfResponse,
 } from '../types';
 
 export const invoiceService = {
@@ -73,6 +74,19 @@ export const invoiceService = {
   async sendPaymentLink(invoiceId: string): Promise<SendPaymentLinkResponse> {
     const { data } = await api.post<SendPaymentLinkResponse>(
       `/razorpay/send-payment-link/${invoiceId}`
+    );
+    return data;
+  },
+
+  /**
+   * Generate PDF on the server and email it to the client.
+   * Accepts an optional base64 pdfData string; if omitted the server
+   * renders the PDF itself from the saved invoice.
+   */
+  async sendInvoicePdf(invoiceId: string, pdfBase64?: string): Promise<SendInvoicePdfResponse> {
+    const { data } = await api.post<SendInvoicePdfResponse>(
+      `/invoices/${invoiceId}/send-pdf`,
+      { pdfBase64 }
     );
     return data;
   },

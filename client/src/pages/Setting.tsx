@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Bell, Save, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Bell, Save, CheckCircle2 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { CURRENCIES } from '../data/data';
 import { useAuth } from '../context/AuthContext';

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Invoice from './pages/Invoice';
+import InvoiceBuilder from './pages/InvoiceBuilder';
 import Customer from './pages/Customer';
 import Transaction from './pages/Transaction';
 import Report from './pages/Report';
@@ -68,6 +69,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Invoice />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/invoices/new"
+              element={
+                <ProtectedRoute>
+                  <InvoiceBuilder />
                 </ProtectedRoute>
               }
             />

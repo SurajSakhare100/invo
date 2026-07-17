@@ -5,6 +5,14 @@ export interface InvoiceItem {
   qty: number;
   unitPrice: number;
   total: number;
+  // Optional user-defined extra columns: { colName: value }
+  extras?: Record<string, string>;
+}
+
+// Column definition for custom columns in the invoice builder
+export interface InvoiceColumn {
+  key: string;   // unique identifier, e.g. "size"
+  label: string; // display name, e.g. "Size"
 }
 
 export interface Invoice {
@@ -220,6 +228,11 @@ export interface SendPaymentLinkResponse {
     paymentLinkId: string;
     paymentUrl: string;
   };
+}
+
+export interface SendInvoicePdfResponse {
+  success: boolean;
+  message: string;
 }
 
 
