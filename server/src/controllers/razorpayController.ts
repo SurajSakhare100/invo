@@ -88,7 +88,7 @@ export const sendPaymentLink = async (req: Request, res: Response): Promise<void
         invoiceNumber: invoice.invoiceNumber,
         userId: String(userId),
       },
-      callback_url: process.env.RAZORPAY_CALLBACK_URL || '',
+      callback_url: `${process.env.CLIENT_URL}/payment-success`,
       callback_method: 'get',
     };
 

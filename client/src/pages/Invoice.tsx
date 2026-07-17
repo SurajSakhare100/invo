@@ -542,7 +542,7 @@ export default function Invoice() {
                                 <div className="absolute right-6 top-8 z-20 bg-white border border-gray-200 rounded-xl shadow-lg py-1 w-48">
                                   <button
                                     onClick={() => {
-                                      setEditInvoice(inv);
+                                      navigate(`/invoices/edit/${inv._id}`);
                                       setOpenMenu(null);
                                     }}
                                     className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"

@@ -10,6 +10,7 @@ import Settings from './pages/Setting';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Onboarding from './pages/Onboarding';
+import PaymentSuccess from './pages/PaymentSuccess';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 import { AuthProvider } from './context/AuthContext';
@@ -79,6 +80,18 @@ function App() {
                   <InvoiceBuilder />
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/invoices/edit/:id"
+              element={
+                <ProtectedRoute>
+                  <InvoiceBuilder />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payment-success"
+              element={<PaymentSuccess />}
             />
             <Route
               path="/customers"

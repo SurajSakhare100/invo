@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
 import {
   ArrowLeft, Plus, Trash2, Download, Send,
@@ -15,7 +16,8 @@ import { invoiceService } from '../services/invoiceService';
 import { useAuth } from '../context/AuthContext';
 import { CURRENCIES, STATUS_OPTIONS } from '../data/data';
 import type { InvoiceColumn, InvoiceFormData } from '../types';
-import { useForm, useFieldArray } from "react-hook-form";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
   INR: '₹', USD: '$', EUR: '€', GBP: '£',
@@ -64,10 +66,12 @@ const labelCls = 'block text-xs font-semibold text-gray-600 mb-1.5';
 
 export default function InvoiceBuilder() {
   const navigate = useNavigate();
+  const { id: invoiceId } = useParams<{ id: string }>();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const isEditing = !!invoiceId;
 
-  const [savedInvoiceId, setSavedInvoiceId] = useState<string | null>(null);
+  const [savedInvoiceId, setSavedInvoiceId] = useState<string | null>(invoiceId || null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
   // User-defined extra columns e.g. [{ key: 'size', label: 'Size' }]
@@ -80,12 +84,20 @@ export default function InvoiceBuilder() {
     setTimeout(() => setToast(null), 4000);
   }, []);
 
+  // ─── Fetch existing invoice if editing ───────────────────────────────────
+  const { data: existingInvoice, isLoading: loadingInvoice } = useQuery({
+    queryKey: ['invoice', invoiceId],
+    queryFn: () => invoiceService.getInvoiceById(invoiceId!),
+    enabled: isEditing,
+  });
+
   // ─── Form ────────────────────────────────────────────────────────────────
   const {
     register,
     control,
     watch,
     setValue,
+    reset,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
@@ -117,6 +129,45 @@ export default function InvoiceBuilder() {
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
   const watched = watch();
+
+  // ─── Pre-fill form when editing ───────────────────────────────────────────
+  useEffect(() => {
+    if (existingInvoice?.data) {
+      const inv = existingInvoice.data;
+      reset({
+        client: inv.client,
+        clientEmail: inv.clientEmail,
+        currency: inv.currency,
+        status: inv.status,
+        dueDate: inv.dueDate.split('T')[0],
+        items: inv.items.map((item) => ({
+          description: item.description,
+          qty: item.qty,
+          unitPrice: item.unitPrice,
+          total: item.total,
+          extras: item.extras || {},
+        })),
+        notes: inv.notes,
+        amount: inv.amount,
+      });
+
+      // Extract any custom columns from items
+      const colKeys = new Set<string>();
+      inv.items.forEach((item) => {
+        if (item.extras) {
+          Object.keys(item.extras).forEach((k) => colKeys.add(k));
+        }
+      });
+      if (colKeys.size > 0) {
+        setExtraColumns(
+          Array.from(colKeys).map((k) => ({
+            key: k,
+            label: k.replace(/_\d+$/, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+          }))
+        );
+      }
+    }
+  }, [existingInvoice, reset]);
 
   // Auto-compute line totals + grand total whenever qty / unitPrice change
   useEffect(() => {
@@ -158,8 +209,8 @@ export default function InvoiceBuilder() {
 
   // ─── Live PDF data ────────────────────────────────────────────────────────
   const pdfData: InvoicePDFData = {
-    invoiceNumber: savedInvoiceId ?? 'PREVIEW',
-    issueDate:     new Date().toISOString(),
+    invoiceNumber: savedInvoiceId ? (existingInvoice?.data?.invoiceNumber ?? '—') : 'PREVIEW',
+    issueDate:     existingInvoice?.data?.createdAt ?? new Date().toISOString(),
     dueDate:       watched.dueDate || '',
     status:        watched.status,
     senderName:    user?.name || '',
@@ -240,6 +291,19 @@ export default function InvoiceBuilder() {
   const isBusy      = saveMutation.isPending || sendPdfMutation.isPending;
 
   // ─── Render ───────────────────────────────────────────────────────────────
+  
+  // Show loading spinner when fetching existing invoice
+  if (isEditing && loadingInvoice) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF9] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 size={40} className="animate-spin text-gray-400" />
+          <p className="text-sm text-gray-500">Loading invoice...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FAFAF9] text-gray-900 font-sans flex">
       <Sidebar activePage="Invoices" />
@@ -256,8 +320,14 @@ export default function InvoiceBuilder() {
               <ArrowLeft size={15} className="text-gray-600" />
             </button>
             <div>
-              <h1 className="text-lg font-bold tracking-tight">New Invoice</h1>
-              <p className="text-xs text-gray-400">Form left · live PDF preview right</p>
+              <h1 className="text-lg font-bold tracking-tight">
+                {isEditing ? 'Edit Invoice' : 'New Invoice'}
+              </h1>
+              <p className="text-xs text-gray-400">
+                {isEditing && existingInvoice?.data
+                  ? `${existingInvoice.data.invoiceNumber} — Form left · PDF preview right`
+                  : 'Form left · live PDF preview right'}
+              </p>
             </div>
           </div>
 
