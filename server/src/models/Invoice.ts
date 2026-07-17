@@ -20,6 +20,11 @@ export interface IInvoice extends Document {
   items: IInvoiceItem[];
   notes: string;
   user: mongoose.Types.ObjectId | string;
+  // Razorpay payment link fields
+  razorpayPaymentLinkId: string;
+  razorpayPaymentLinkUrl: string;
+  razorpayPaymentLinkShortUrl: string;
+  razorpayPaymentLinkStatus: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -78,6 +83,22 @@ const InvoiceSchema = new Schema<IInvoice>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'User ID is required'],
+    },
+    razorpayPaymentLinkId: {
+      type: String,
+      default: '',
+    },
+    razorpayPaymentLinkUrl: {
+      type: String,
+      default: '',
+    },
+    razorpayPaymentLinkShortUrl: {
+      type: String,
+      default: '',
+    },
+    razorpayPaymentLinkStatus: {
+      type: String,
+      default: '',
     },
   },
   {

@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export type TransactionStatus = 'Success' | 'Pending' | 'Failed' | 'Refunded';
-export type PaymentMethod = 'Card' | 'Bank Transfer' | 'Cash' | 'PayPal';
+export type PaymentMethod = 'Card' | 'Bank Transfer' | 'Cash' | 'PayPal' | 'Razorpay';
 
 export interface ITransaction extends Document {
   transactionId: string;
@@ -57,7 +57,7 @@ const TransactionSchema = new Schema<ITransaction>(
     },
     paymentMethod: {
       type: String,
-      enum: ['Card', 'Bank Transfer', 'Cash', 'PayPal'],
+      enum: ['Card', 'Bank Transfer', 'Cash', 'PayPal', 'Razorpay'],
       default: 'Card',
     },
     status: {

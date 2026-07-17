@@ -13,7 +13,6 @@ export interface IUser extends Document {
   country?: string;
   taxId?: string;
   currency?: string;
-  sandboxMode?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -74,10 +73,6 @@ const UserSchema = new Schema<IUser>(
       type: String,
       default: 'USD',
       trim: true,
-    },
-    sandboxMode: {
-      type: Boolean,
-      default: true,
     },
   },
   {

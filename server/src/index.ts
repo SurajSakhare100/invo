@@ -11,6 +11,7 @@ import customerRoutes from "./routes/customerRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
 import authRoutes from "./routes/authRoutes";
 import analyticsRoutes from "./routes/analyticsRoutes";
+import razorpayRoutes from "./routes/razorpayRoutes";
 
 import { ConnectDB } from "./config/db";
 
@@ -46,8 +47,9 @@ app.use(
       origin: string | undefined,
       callback: (error: Error | null, success?: boolean) => void
     ) {
+      // Allow requests with no origin (Postman, curl, server-to-server)
       if (!origin) {
-        callback(new Error(`CORS not allowed: ${origin}`));
+        callback(null, true);
         return;
       }
 
@@ -56,11 +58,28 @@ app.use(
         return;
       }
 
-      callback(new Error("CORS not allowed"));
+      callback(new Error(`CORS not allowed for origin: ${origin}`));
     },
     credentials: true,
   })
 );
+// Capture raw body for Razorpay webhook signature verification.
+// Must be registered BEFORE express.json() so the raw buffer is preserved.
+app.use(
+  (req: express.Request & { rawBody?: Buffer }, _res: express.Response, next: express.NextFunction) => {
+    if (req.path === '/api/razorpay/webhook') {
+      let data = Buffer.alloc(0);
+      req.on('data', (chunk: Buffer) => { data = Buffer.concat([data, chunk]); });
+      req.on('end', () => {
+        req.rawBody = data;
+        next();
+      });
+    } else {
+      next();
+    }
+  }
+);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
@@ -79,6 +98,7 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/razorpay", razorpayRoutes);
 
 
 app.use("*", (_req, res) => {

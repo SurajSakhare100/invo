@@ -159,7 +159,6 @@ export const getAnalyticsReport = async (req: Request, res: Response): Promise<v
       },
     });
   } catch (error) {
-    console.error('Analytics error:', error);
     res.status(500).json({ success: false, message: 'Analytics server error', error });
   }
 };

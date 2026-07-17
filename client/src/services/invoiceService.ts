@@ -5,6 +5,7 @@ import type {
   InvoiceResponse,
   InvoiceFormData,
   InvoiceFilters,
+  SendPaymentLinkResponse,
 } from '../types';
 
 export const invoiceService = {
@@ -62,6 +63,17 @@ export const invoiceService = {
   /** Get invoice stats (counts per status) */
   async getStats(): Promise<{ success: boolean; data: Array<{ _id: string; count: number; totalAmount: number }> }> {
     const { data } = await api.get('/invoices/stats');
+    return data;
+  },
+
+  /**
+   * Create a Razorpay Payment Link for an invoice and email it to the client.
+   * If a valid link already exists for the invoice, the email is resent.
+   */
+  async sendPaymentLink(invoiceId: string): Promise<SendPaymentLinkResponse> {
+    const { data } = await api.post<SendPaymentLinkResponse>(
+      `/razorpay/send-payment-link/${invoiceId}`
+    );
     return data;
   },
 };

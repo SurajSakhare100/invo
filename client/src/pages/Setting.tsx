@@ -42,7 +42,6 @@ export default function SettingsPage() {
       country: user?.country || '',
       taxId: user?.taxId || '',
       currency: user?.currency || 'USD',
-      sandboxMode: user?.sandboxMode ?? true,
     },
   });
 
@@ -57,7 +56,6 @@ export default function SettingsPage() {
         country: user.country || '',
         taxId: user.taxId || '',
         currency: user.currency || 'USD',
-        sandboxMode: user.sandboxMode ?? true,
       });
     }
   }, [user, reset]);
@@ -74,7 +72,6 @@ export default function SettingsPage() {
         country: values.country,
         taxId: values.taxId,
         currency: values.currency,
-        sandboxMode: values.sandboxMode,
       });
       setSuccessMsg(true);
       setTimeout(() => setSuccessMsg(false), 3000);
@@ -228,28 +225,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Section 3: Billing Environment Toggle */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
-            <div className="flex gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
-                <ShieldAlert size={20} />
-              </div>
-              <div>
-                <h4 className="font-bold text-sm text-gray-800">Sandbox Environment</h4>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Enable simulated payments without real bank or Stripe API handshakes
-                </p>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                {...register('sandboxMode')}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7ED957]" />
-            </label>
-          </div>
+        
 
           {/* Save trigger */}
           <div className="flex justify-end pt-2">

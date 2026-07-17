@@ -18,6 +18,11 @@ export interface Invoice {
   dueDate: string;
   items: InvoiceItem[];
   notes: string;
+  // Razorpay payment link fields
+  razorpayPaymentLinkId?: string;
+  razorpayPaymentLinkUrl?: string;
+  razorpayPaymentLinkShortUrl?: string;
+  razorpayPaymentLinkStatus?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -127,7 +132,7 @@ export interface CustomerFilters {
 // ─── Transaction types ──────────────────────────────────────────────────────
 
 export type TransactionStatus = 'Success' | 'Pending' | 'Failed' | 'Refunded';
-export type PaymentMethod = 'Card' | 'Bank Transfer' | 'Cash' | 'PayPal';
+export type PaymentMethod = 'Card' | 'Bank Transfer' | 'Cash' | 'PayPal' | 'Razorpay';
 
 export interface Transaction {
   _id: string;
@@ -195,7 +200,6 @@ export interface User {
   country?: string;
   taxId?: string;
   currency?: string;
-  sandboxMode?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -204,6 +208,17 @@ export interface AuthResponse {
   success: boolean;
   data: User & {
     token: string;
+  };
+}
+
+// ─── Razorpay types ──────────────────────────────────────────────────────────
+
+export interface SendPaymentLinkResponse {
+  success: boolean;
+  message: string;
+  data: {
+    paymentLinkId: string;
+    paymentUrl: string;
   };
 }
 

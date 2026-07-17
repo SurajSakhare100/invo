@@ -13,6 +13,10 @@ import {
   Trash2,
   RefreshCw,
   FileText,
+  Send,
+  ExternalLink,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { StatusBadge } from '../components/StatusBadge';
@@ -63,6 +67,10 @@ export default function Invoice() {
 
   // Dropdown menu
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+
+  // Payment link feedback: tracks { invoiceId -> { status, url } }
+  type PaymentLinkState = { status: 'sending' | 'sent' | 'error'; url?: string; message?: string };
+  const [paymentLinkStates, setPaymentLinkStates] = useState<Record<string, PaymentLinkState>>({});
 
   // ─── Data fetching ────────────────────────────────────────────────────────
   const { sortBy, sortOrder } = parseSortValue(filters.sortValue);
@@ -135,6 +143,41 @@ export default function Invoice() {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       setSelected([]);
       setBulkDeleteOpen(false);
+    },
+  });
+
+  const sendPaymentLinkMutation = useMutation({
+    mutationFn: (invoiceId: string) => invoiceService.sendPaymentLink(invoiceId),
+    onMutate: (invoiceId) => {
+      setPaymentLinkStates((prev) => ({ ...prev, [invoiceId]: { status: 'sending' } }));
+    },
+    onSuccess: (result, invoiceId) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      setPaymentLinkStates((prev) => ({
+        ...prev,
+        [invoiceId]: { status: 'sent', url: result.data.paymentUrl, message: result.message },
+      }));
+      // Auto-clear after 8 seconds
+      setTimeout(() => {
+        setPaymentLinkStates((prev) => {
+          const next = { ...prev };
+          delete next[invoiceId];
+          return next;
+        });
+      }, 8000);
+    },
+    onError: (_err, invoiceId) => {
+      setPaymentLinkStates((prev) => ({
+        ...prev,
+        [invoiceId]: { status: 'error', message: 'Failed to send payment link. Try again.' },
+      }));
+      setTimeout(() => {
+        setPaymentLinkStates((prev) => {
+          const next = { ...prev };
+          delete next[invoiceId];
+          return next;
+        });
+      }, 5000);
     },
   });
 
@@ -445,81 +488,156 @@ export default function Invoice() {
                     </td>
                   </tr>
                 ) : (
-                  invoices.map((inv) => (
-                    <tr
-                      key={inv._id}
-                      className={`border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60 transition-colors ${selected.includes(inv._id) ? 'bg-green-50/30' : ''
-                        }`}
-                    >
-                      <td className="py-4 pl-5">
-                        <input
-                          type="checkbox"
-                          checked={selected.includes(inv._id)}
-                          onChange={() => toggleRow(inv._id)}
-                          className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-black"
-                        />
-                      </td>
-                      <td className="py-4 px-3 font-semibold text-gray-800 font-mono text-xs">
-                        {inv.invoiceNumber}
-                      </td>
-                      <td className="py-4 px-3">
-                        <div>
-                          <div className="font-medium text-gray-800">{inv.client}</div>
-                          <div className="text-xs text-gray-400">{inv.clientEmail}</div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-3 text-gray-500 text-xs">{formatDate(inv.createdAt)}</td>
-                      <td className="py-4 px-3 text-gray-500 text-xs">{formatDate(inv.dueDate)}</td>
-                      <td className="py-4 px-3 text-gray-800 font-semibold">
-                        {formatAmount(inv.amount, inv.currency)}
-                      </td>
-                      <td className="py-4 px-3">
-                        <StatusBadge status={inv.status} />
-                      </td>
-                      <td className="py-4 px-2 text-gray-400 relative">
-                        <button
-                          onClick={() =>
-                            setOpenMenu(openMenu === inv._id ? null : inv._id)
-                          }
-                          className="hover:bg-gray-100 rounded-lg p-1.5 transition-colors"
-                        >
-                          <MoreHorizontal size={16} />
-                        </button>
+                  invoices.map((inv) => {
+                    const plState = paymentLinkStates[inv._id];
+                    const isSending = plState?.status === 'sending';
+                    const alreadyHasLink =
+                      inv.razorpayPaymentLinkId &&
+                      inv.razorpayPaymentLinkStatus !== 'cancelled' &&
+                      inv.razorpayPaymentLinkStatus !== 'expired';
 
-                        {openMenu === inv._id && (
-                          <>
-                            {/* Backdrop to close */}
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setOpenMenu(null)}
+                    return (
+                      <>
+                        <tr
+                          key={inv._id}
+                          className={`border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60 transition-colors ${
+                            selected.includes(inv._id) ? 'bg-green-50/30' : ''
+                          }`}
+                        >
+                          <td className="py-4 pl-5">
+                            <input
+                              type="checkbox"
+                              checked={selected.includes(inv._id)}
+                              onChange={() => toggleRow(inv._id)}
+                              className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-black"
                             />
-                            <div className="absolute right-6 top-8 z-20 bg-white border border-gray-200 rounded-xl shadow-lg py-1 w-36">
-                              <button
-                                onClick={() => {
-                                  setEditInvoice(inv);
-                                  setOpenMenu(null);
-                                }}
-                                className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                <Pencil size={14} className="text-gray-400" />
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setDeleteId(inv._id);
-                                  setOpenMenu(null);
-                                }}
-                                className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                              >
-                                <Trash2 size={14} />
-                                Delete
-                              </button>
+                          </td>
+                          <td className="py-4 px-3 font-semibold text-gray-800 font-mono text-xs">
+                            {inv.invoiceNumber}
+                          </td>
+                          <td className="py-4 px-3">
+                            <div>
+                              <div className="font-medium text-gray-800">{inv.client}</div>
+                              <div className="text-xs text-gray-400">{inv.clientEmail}</div>
                             </div>
-                          </>
+                          </td>
+                          <td className="py-4 px-3 text-gray-500 text-xs">{formatDate(inv.createdAt)}</td>
+                          <td className="py-4 px-3 text-gray-500 text-xs">{formatDate(inv.dueDate)}</td>
+                          <td className="py-4 px-3 text-gray-800 font-semibold">
+                            {formatAmount(inv.amount, inv.currency)}
+                          </td>
+                          <td className="py-4 px-3">
+                            <StatusBadge status={inv.status} />
+                          </td>
+                          <td className="py-4 px-2 text-gray-400 relative">
+                            <button
+                              onClick={() =>
+                                setOpenMenu(openMenu === inv._id ? null : inv._id)
+                              }
+                              className="hover:bg-gray-100 rounded-lg p-1.5 transition-colors"
+                            >
+                              <MoreHorizontal size={16} />
+                            </button>
+
+                            {openMenu === inv._id && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-10"
+                                  onClick={() => setOpenMenu(null)}
+                                />
+                                <div className="absolute right-6 top-8 z-20 bg-white border border-gray-200 rounded-xl shadow-lg py-1 w-48">
+                                  <button
+                                    onClick={() => {
+                                      setEditInvoice(inv);
+                                      setOpenMenu(null);
+                                    }}
+                                    className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                  >
+                                    <Pencil size={14} className="text-gray-400" />
+                                    Edit
+                                  </button>
+
+                                  {/* Send / Resend Payment Link */}
+                                  <button
+                                    disabled={isSending}
+                                    onClick={() => {
+                                      sendPaymentLinkMutation.mutate(inv._id);
+                                      setOpenMenu(null);
+                                    }}
+                                    className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors disabled:opacity-50"
+                                  >
+                                    {isSending ? (
+                                      <Loader2 size={14} className="animate-spin" />
+                                    ) : (
+                                      <Send size={14} />
+                                    )}
+                                    {alreadyHasLink ? 'Resend Pay Link' : 'Send Pay Link'}
+                                  </button>
+
+                                  <div className="border-t border-gray-100 my-1" />
+
+                                  <button
+                                    onClick={() => {
+                                      setDeleteId(inv._id);
+                                      setOpenMenu(null);
+                                    }}
+                                    className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                  >
+                                    <Trash2 size={14} />
+                                    Delete
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+
+                        {/* Inline feedback row for payment link send result */}
+                        {plState && (
+                          <tr key={`${inv._id}-feedback`} className="border-b border-gray-50">
+                            <td colSpan={8} className="px-5 py-0">
+                              <div
+                                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm my-1.5 ${
+                                  plState.status === 'sending'
+                                    ? 'bg-indigo-50 text-indigo-700'
+                                    : plState.status === 'sent'
+                                    ? 'bg-green-50 text-green-700'
+                                    : 'bg-red-50 text-red-700'
+                                }`}
+                              >
+                                {plState.status === 'sending' && (
+                                  <Loader2 size={15} className="animate-spin flex-shrink-0" />
+                                )}
+                                {plState.status === 'sent' && (
+                                  <CheckCircle2 size={15} className="flex-shrink-0" />
+                                )}
+                                {plState.status === 'error' && (
+                                  <span className="flex-shrink-0">⚠</span>
+                                )}
+
+                                <span className="flex-1">
+                                  {plState.status === 'sending' && 'Sending payment link to customer…'}
+                                  {plState.status === 'sent' && (plState.message || 'Payment link sent to customer.')}
+                                  {plState.status === 'error' && (plState.message || 'Failed to send.')}
+                                </span>
+
+                                {plState.status === 'sent' && plState.url && (
+                                  <a
+                                    href={plState.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-xs font-semibold underline underline-offset-2 flex-shrink-0"
+                                  >
+                                    Open link <ExternalLink size={11} />
+                                  </a>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
                         )}
-                      </td>
-                    </tr>
-                  ))
+                      </>
+                    );
+                  })
                 )}
               </tbody>
             </table>

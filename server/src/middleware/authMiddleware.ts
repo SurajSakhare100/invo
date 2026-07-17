@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'invoico_super_secret_key_12345';
-
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
@@ -11,6 +9,9 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const protect: RequestHandler = (req, res: Response, next: NextFunction): void => {
+  // Read at call-time so dotenv.config() in index.ts has already run
+  const JWT_SECRET = process.env.JWT_SECRET!;
+
   const authReq = req as AuthenticatedRequest;
   let token: string | undefined;
 

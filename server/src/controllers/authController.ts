@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
-
+import dotenv from 'dotenv';
+dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET!;
 const JWT_EXPIRES_IN = '7d';
 
@@ -131,7 +131,7 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response): P
       return;
     }
 
-    const { company, phone, companyEmail, address, city, country, taxId, currency, sandboxMode } = req.body;
+    const { company, phone, companyEmail, address, city, country, taxId, currency } = req.body;
 
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -147,7 +147,6 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response): P
     if (country !== undefined) user.country = country;
     if (taxId !== undefined) user.taxId = taxId;
     if (currency !== undefined) user.currency = currency;
-    if (sandboxMode !== undefined) user.sandboxMode = sandboxMode;
 
     await user.save();
 
@@ -213,7 +212,5 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
       },
     });
   } catch (error) {
-    console.error('Google login error:', error);
-    res.status(500).json({ success: false, message: 'Server error during Google login', error });
-  }
+    res.status(500).json({ success: false, message: 'Server error during Google login', error });  }
 };
