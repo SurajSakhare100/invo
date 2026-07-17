@@ -132,7 +132,7 @@ export interface CustomerFilters {
 // ─── Transaction types ──────────────────────────────────────────────────────
 
 export type TransactionStatus = 'Success' | 'Pending' | 'Failed' | 'Refunded';
-export type PaymentMethod = 'Card' | 'Bank Transfer' | 'Cash' | 'PayPal' | 'Razorpay';
+export type PaymentMethod = 'Cash' | 'Razorpay';
 
 export interface Transaction {
   _id: string;

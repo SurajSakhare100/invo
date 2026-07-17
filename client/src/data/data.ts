@@ -46,7 +46,7 @@ export const TRANSACTION_TABS = ['All', 'Success', 'Pending', 'Failed', 'Refunde
 
 export const TRANSACTION_STATUS_OPTIONS = ['Success', 'Pending', 'Failed', 'Refunded'] as const;
 
-export const PAYMENT_METHODS = ['Card', 'Bank Transfer', 'Cash', 'PayPal'] as const;
+export const PAYMENT_METHODS = ['Cash', 'Razorpay'] as const;
 
 export const SORT_OPTIONS = {
   invoices: [

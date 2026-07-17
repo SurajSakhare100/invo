@@ -97,7 +97,7 @@ export const createTransaction = async (req: Request, res: Response): Promise<vo
       customerName: customerName || 'Walk-in Customer',
       amount,
       currency: currency || 'USD',
-      paymentMethod: paymentMethod || 'Card',
+      paymentMethod: paymentMethod || 'Cash',
       status: status || 'Success',
       referenceNumber: referenceNumber || '',
       paymentDate: paymentDate || new Date(),
