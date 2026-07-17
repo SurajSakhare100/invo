@@ -112,12 +112,6 @@ export default function Invoice() {
   );
 
   // ─── Mutations ────────────────────────────────────────────────────────────
-  const createMutation = useMutation({
-    mutationFn: (data: InvoiceFormData) => invoiceService.createInvoice(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    },
-  });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: InvoiceFormData }) =>

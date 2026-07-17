@@ -75,8 +75,8 @@ export default function SettingsPage() {
       });
       setSuccessMsg(true);
       setTimeout(() => setSuccessMsg(false), 3000);
-    } catch (error) {
-      console.error('Failed to save settings:', error);
+    } catch {
+      // settings save failed — error visible via missing success toast
     } finally {
       setLoading(false);
     }
